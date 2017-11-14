@@ -1,9 +1,10 @@
 
 /**
+ * Decimal (_10) implementation for the countsystem.
+ * Note that it is REQUIRED to implement this in order to implement countsystem
  * 
- * 
- * @author Daniel Taylor (DTIII)
- * @version .._-
+ * @author Daniel Taylor (Ambulator)
+ * @version 13.11.17
  */
 public class Decimal extends CountSystem
 {
