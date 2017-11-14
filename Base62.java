@@ -1,6 +1,6 @@
 
 /**
- * Base_62 implementation of the countsystem
+ * an example of a countsystem implementation (_62)
  * 
  * @author Daniel Taylor (Ambulator)
  * @version 13.11.17
@@ -19,6 +19,11 @@ public class Base62 extends CountSystem
         super(start,BASE);
     }
     
+    /*/
+    alphabet array initializer.
+    note that the order of the array is arbitrary, as are the actual characters within it
+    i.e. anything goes in this array
+    /*/
     void initAlphabet()
     {
         alpha = new char[BASE_INT];
