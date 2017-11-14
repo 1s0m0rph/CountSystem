@@ -1,9 +1,9 @@
 
 /**
- * .
+ * Main countsystem class implementation
  * 
- * @author Daniel Taylor (DTIII)
- * @version .._-
+ * @author Daniel Taylor (Ambulator)
+ * @version 13.11.17
  */
 public abstract class CountSystem
 {
@@ -11,6 +11,12 @@ public abstract class CountSystem
     int BASE_INT;
     String current;
     char[] alpha;
+    
+    /*/
+    class constructor with just given base
+    
+    @param _base the base to set to, value for base is stored in a string (use decimal implementation for math)
+    /*/
     public CountSystem(String _base)
     {
         BASE = _base;
@@ -19,6 +25,12 @@ public abstract class CountSystem
         current = Character.toString(alpha[0]);
     }
     
+    
+    /*/
+    constructor with given start value
+    
+    @param start the start value, useful when using this for just counting in any given base
+    /*/
     public CountSystem(String start, String _base)
     {
         BASE = _base;
@@ -27,8 +39,19 @@ public abstract class CountSystem
         current = convert(start);
     }
     
+    /*/
+    in the inheriting classes, this sets up the alphabet with any desired characters
+    /*/
     abstract void initAlphabet();
     
+    /*/
+    replaces the index of the given string with the given character at the given index
+    
+    @param original the string to change
+    @param index the index to change
+    @param newChar the character to change to
+    @return the new string (with the character and index index changed)
+    /*/
     String replaceStringIndex(String original, int index, char newChar)
     {
         String r = "";
@@ -40,39 +63,20 @@ public abstract class CountSystem
         return r;
     }
     
+    /*/
+    converts the current number to base 10, used when using the class for counting
+    /*/
     String convertTo_10()
     {
         return convertTo_10(current);
     }
     
-    //     String convert(long num)
-    //     {
-    //         String r = "";
-    //         double log_b = (Math.log(num)) / (Math.log(BASE));
-    //         for(int exp = (int)Math.floor(log_b); exp >= 0; exp--)
-    //         {
-    //             if(num - Math.pow(BASE,exp) >= 0)
-    //             {
-    //                 double test = Math.pow(BASE,exp);
-    //                 num -= Math.pow(BASE,exp);
-    //                 r += alpha[1];
-    //                 int c = 2;
-    //                 while(num - Math.pow(BASE,exp) >= 0)
-    //                 {
-    //                     num -= Math.pow(BASE,exp);
-    //                     r = replaceStringIndex(r,r.length()-1,alpha[c]);
-    //                     c++;
-    //                 }
-    //             }
-    //             else
-    //             {
-    //                 r += alpha[0];
-    //             }
-    //         }
-    //         
-    //         return r;
-    //     }
+    /*/
+    returns the log base BASE of a given base 10 number. Used in conversion
     
+    @param num the (_10) number to take the log_BASE() of
+    @return the log in base 10
+    /*/
     String log(String num)
     {
         if(BASE.equals("10"))
@@ -89,6 +93,12 @@ public abstract class CountSystem
         return d.decrement(r);
     }
     
+    /*/
+    convert a given number into base BASE
+    
+    @param num the number (_10) to convert
+    @return the converted number in base BASE
+    /*/
     String convert(String num)
     {
         if(num.length() < 2)return Character.toString(alpha[Integer.parseInt(num)]);
@@ -115,6 +125,12 @@ public abstract class CountSystem
         return r;
     }
     
+    /*/
+    convert a given number from base BASE to base 10
+    
+    @param conv the number (_BASE) to convert
+    @return the converted number in base 10
+    /*/
     String convertTo_10(String conv)
     {
         if(conv == null || conv.length() == 0)return null;
@@ -147,6 +163,13 @@ public abstract class CountSystem
         return increment(num,num.length()-1);
     }
     
+    /*/
+    adds one to a given number in base BASE recursively
+    
+    @param num the number to increment
+    @param digitPos the digit to start from (used to walk backwards through the number, but you can call from any given digit to increment from it)
+    @return num + 1
+    /*/
     String increment(String num, int digitPos)
     {
         if(num.charAt(digitPos) == alpha[BASE_INT - 1])
@@ -182,6 +205,13 @@ public abstract class CountSystem
         return decrement(num,num.length()-1);
     }
     
+    /*/
+    takes one from a given number in base BASE recursively
+    
+    @param num the number to decrement
+    @param digitPos the digit to start from (used to walk backwards through the number, but you can call from any given digit to increment from it)
+    @return num - 1
+    /*/
     String decrement(String num, int digitPos)
     {
         if(num.equals(Character.toString(alpha[0])))return "-" + alpha[1];
@@ -211,6 +241,12 @@ public abstract class CountSystem
         return decrement(num,digitPos-1);
     }
     
+    /*/
+    get the index of a given character in the number base's alphabet
+    
+    @param c the character whose index is to be found
+    @return the character's index
+    /*/
     int alphaIndex(char c)
     {
         int r;
@@ -221,9 +257,13 @@ public abstract class CountSystem
         return -1;
     }
     
-    /*
-     * O(log base BASE (n)) performance
-     */
+    /*/
+    adds the value of a to b. Can handle negatives properly
+    
+    @param a the first number
+    @param b the second number
+    @return a + b (_BASE)
+    /*/
     String add(String a, String b)
     {
         if(a.charAt(0) == '-' && b.charAt(0) != '-')
@@ -295,6 +335,13 @@ public abstract class CountSystem
         return r;
     }
     
+    /*/
+    check if a < b
+    
+    @param a
+    @param b
+    @return true if a < b, false if a >= b
+    /*/
     boolean lessThan(String a, String b)
     {
         if(a.equals(b))return false;
@@ -313,9 +360,13 @@ public abstract class CountSystem
         return false;
     }
     
-    /*
-     * O(log base BASE (n)) performance
-     */
+    /*/
+    take a - b. Can handle negatives. No conversion to _10
+    
+    @param a
+    @param b
+    @return a - b (_BASE)
+    /*/
     String subtract(String a, String b)
     {
         if(a.charAt(0) == '-' && b.charAt(0) != '-')
@@ -403,6 +454,13 @@ public abstract class CountSystem
         return r;
     }
     
+    /*/
+    helper method to get a string with a given number of zeroes
+    not that "zeroes" refers to the number base's character for zero, which isn't necessarily 0
+    
+    @param n the number of zeroes
+    @return a string with n zero characters
+    /*/
     String nZeroes(int n)
     {
         String r = "";
@@ -413,6 +471,13 @@ public abstract class CountSystem
         return r;
     }
     
+    /*/
+    take a*b
+    
+    @param a
+    @param b
+    @return a * b (_BASE)
+    /*/
     String multiply(String a, String b)
     {
         if(lessThan(a,b))return multiply(b,a);
@@ -437,6 +502,13 @@ public abstract class CountSystem
         return r;
     }
     
+    /*/
+    take a^b (take a*a, b times)
+    
+    @param a
+    @param b
+    @return a^b (_BASE)
+    /*/
     String pow(String a, String b)
     {
         if(b.equals(Character.toString(alpha[0])))return "1";
@@ -448,6 +520,13 @@ public abstract class CountSystem
         return r;
     }
     
+    /*/
+    take a % b. (same as the remainder for divide(String,String))
+    
+    @param a
+    @param b
+    @return a % b (_BASE)
+    /*/
     String mod(String a, String b)
     {
         if(!(a.equals(b) || lessThan(b,a)) || a.substring(0,1).equals("-"))return null;
@@ -460,6 +539,15 @@ public abstract class CountSystem
         return a;
     }
     
+    /*/
+    take a / b. Does not return decimal representation, as CountSystem was designed for ints
+    note that this just takes a-b a number of times, which is quite inefficient
+    a way to improve this would be to use the LDA, I have not due to lack of time and lack of interest
+    
+    @param a
+    @param b
+    @return a / b (_BASE)
+    /*/
     String divide(String a, String b)
     {
         String div = Character.toString(alpha[0]);
