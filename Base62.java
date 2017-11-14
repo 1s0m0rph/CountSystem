@@ -1,9 +1,9 @@
 
 /**
+ * Base_62 implementation of the countsystem
  * 
- * 
- * @author Daniel Taylor (DTIII)
- * @version .._-
+ * @author Daniel Taylor (Ambulator)
+ * @version 13.11.17
  */
 public class Base62 extends CountSystem
 {
