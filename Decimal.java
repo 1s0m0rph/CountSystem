@@ -1,25 +1,19 @@
 
-/**
- * Decimal (_10) implementation for the countsystem.
- * Note that it is REQUIRED to implement this in order to implement countsystem
- * 
- * @author Daniel Taylor (Ambulator)
- * @version 13.11.17
- */
 public class Decimal extends CountSystem
 {
     static final String BASE = "10";
     static final int BASE_INT = 10;
-    public Decimal(String start)
-    {
-        super(start,BASE);
-    }
-    
+
     public Decimal()
     {
         super(BASE);
     }
-    
+
+    public Decimal(char[] _alpha)
+    {
+        super(BASE,_alpha);
+    }
+
     void initAlphabet()
     {
         alpha = new char[BASE_INT];
