@@ -1,10 +1,4 @@
 
-/**
- * 
- * 
- * @author Daniel Taylor (DTIII)
- * @version .._-
- */
 public class Binary extends CountSystem
 {
     static final String BASE = "2";

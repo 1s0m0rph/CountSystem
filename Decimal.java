@@ -1,10 +1,4 @@
 
-/**
- *
- *
- * @author Daniel Taylor (DTIII)
- * @version .._-
- */
 public class Decimal extends CountSystem
 {
     static final String BASE = "10";

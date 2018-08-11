@@ -1,9 +1,4 @@
-/**
- * .
- *
- * @author Daniel Taylor (DTIII)
- * @version .._-
- */
+
 public abstract class CountSystem
 {
     private static final char neg = '-'; //change this if you need the '-' character in your alpha
@@ -675,6 +670,7 @@ public abstract class CountSystem
     }
 
     /*
+    TODO: implement Karatsuba for multiplication
      * a little slower, but not recursive
      */
     String multiplyMCSAP(String a, String b)
@@ -898,8 +894,9 @@ public abstract class CountSystem
         return n.substring(posEnd,posBeg+1);
     }
 
-    //MetaCountSystemArbitraryPrecision
-
+    /*
+    TODO: implement some kind of faster division algorithm here
+     */
     String dividePartial(String a, String b)
     {
         //step 1: convert to whole numbers
@@ -968,23 +965,4 @@ public abstract class CountSystem
 
         return r;
     }
-
-    //     String dividePartial(String a, String b)
-    //     {
-    //         String wholePart = divide(a,b);
-    //         String numerator = null;
-    //         if(wholePart.indexOf(" ") != -1)
-    //         {
-    //             numerator = wholePart.substring(wholePart.indexOf(" ") + 2);
-    //         }
-    //
-    //         if(numerator == null)
-    //         return wholePart;
-    //
-    //         //think of the rest of the division as a conversion of the number (0.[numerator]) in base b into base BASE
-    //         //can use base_n for that representation
-    //         //base_n won't (necessarily) need a way to handle partial numbers
-    //         //but it will need a way to handle arbitrary in-bases for conversion
-    //         return "";
-    //     }
 }

@@ -225,30 +225,29 @@ public class MetaCountSystemArbitraryPrecision
         String ubBin = bin.convert(cs,cs.decrement(BASE));
         String lowerBound = csFrom.zero();
         String lbBin = bin.zero();
-        String baseExp = csFrom.pow(ourBaseInTheirBASE,exp);
+        String baseExp = bin.convert(csFrom,csFrom.pow(ourBaseInTheirBASE,exp));
+        String binum = bin.convert(csFrom,num);
         while(csFrom.lessThan(lowerBound,upperBound) || lowerBound.equals(upperBound))
         {
-            //if this division isn't fast enough, we can convert to base 2 first (NEED TO IMPLEMENT THIS)
+            //converting to base 2 first speeds up the division
             String midBin = bin.rightShift(bin.add(ubBin,lbBin),1);
-            if(midBin.indexOf(".") != -1)
+            if(midBin.contains("."))
                 midBin = midBin.substring(0,midBin.indexOf("."));
-            String middle = csFrom.convert(bin,midBin);
-            String checkVal = csFrom.subtract(num,csFrom.multiply(baseExp,middle));
-            if(csFrom.lessThan(checkVal,csFrom.zero()))
+            //String middle = csFrom.convert(bin,midBin);//don't bother calculating this until we return
+            String checkVal = bin.subtract(binum,bin.multiply(baseExp,midBin));
+            if(bin.lessThan(checkVal,bin.zero()))
             {
                 //less
-                upperBound = csFrom.decrement(middle);
                 ubBin = bin.decrement(midBin);
             }
-            else if(csFrom.lessThan(checkVal,baseExp))
+            else if(bin.lessThan(checkVal,baseExp))
             {
                 //correct
-                return middle;
+                return csFrom.convert(bin,midBin);
             }
             else
             {
                 //more
-                lowerBound = csFrom.increment(middle);
                 lbBin = bin.increment(midBin);
             }
         }
@@ -595,6 +594,8 @@ public class MetaCountSystemArbitraryPrecision
      * (a << b) * (c << d) = (ac) << (b + d)
      *
      * a * (b << c) = (ab) << c
+     *
+     * note that this only works correctly on integers, it doesn't account for arbit points
      *
      */
     void leftShift(int places)
