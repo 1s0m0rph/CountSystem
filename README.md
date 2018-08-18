@@ -1,0 +1,7 @@
+# CountSystem
+A polymorphic framework for counting systems (base 2, binary; base 10, decimal; base 16, hexadecimal; base 95; etc.)
+
+
+Pretty much any operation you can perform on a number, you can do in whatever number base you want -- the representation isn't the number and all bases are basically (heh) the same. The only thing that differs (as long as we accept that the definition of "base" refers only to exponential integer number systems) between bases is the alphabet's size and, to a lesser extent, the characters in it. For example, ordinary base 10 (decimal) has 10 symbols: 0,1,2,3,4,5,6,7,8,9; base 16 has 16 symbols: 0,1,2,3,4,5,6,7,8,9,a,b,d,d,e,f; and base 2 (binary) has only 2 symbols: 0 and 1. Because of this arbitrary choice we're making, any math we can do in one base, we can do in any other with a generalized algorithm.
+
+That's the idea of CountSystem. It's a framework to implement counting systems with arbitrary(ish) bases (I say ish because it's still limited by the number of characters you can actually have in an alphabet. Even if we just use integers to represent the characters, we're limited to INT_MAX as a base). That means you can do any math (where "any math" is addition, subtraction, incrementing, base conversion, decrementing, multiplication, division, modulo, and shifting) you might want to do with any number in any number base, as long as you can express that number base with an array of chars for its alphabet.
