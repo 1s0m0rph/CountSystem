@@ -1,4 +1,6 @@
-
+/*
+NOTE 2018-08-18: This whole class's purpose is to serve as a helper for conversion-based division. The implementation of Goldschmidt division renders it essentially obselete, except as a mathematical and algorithmic exercise.
+ */
 import java.util.ArrayList;
 public class MetaCountSystemArbitraryPrecision
 {
@@ -6,6 +8,16 @@ public class MetaCountSystemArbitraryPrecision
     static CountSystem cs;
     ArrayList<String> n;
     int point;//the index of the point. If there's only an implicit point, this is -1
+    boolean isNegative;
+
+    public MetaCountSystemArbitraryPrecision(String base, CountSystem _cs, ArrayList<String> _n, boolean _isNegative)
+    {
+        BASE = base;
+        cs = _cs;
+        n = new ArrayList<String>(_n);
+        point = -1;
+        isNegative = _isNegative;
+    }
 
     /*
      * value of -2 in _n means skip the partial part
@@ -29,6 +41,7 @@ public class MetaCountSystemArbitraryPrecision
                 n.add(_n.get(i));
             }
         }
+        isNegative = false;
     }
 
     public MetaCountSystemArbitraryPrecision(String base, CountSystem _cs, ArrayList<String> _n)
@@ -37,6 +50,7 @@ public class MetaCountSystemArbitraryPrecision
         cs = _cs;
         n = new ArrayList<String>(_n);
         point = -1;
+        isNegative = false;
     }
 
     public MetaCountSystemArbitraryPrecision(String base, CountSystem _cs)
@@ -46,6 +60,7 @@ public class MetaCountSystemArbitraryPrecision
         n = new ArrayList<String>();
         n.add(cs.zero());
         point = -1;
+        isNegative = false;
     }
 
     MetaCountSystemArbitraryPrecision widthInternal()
@@ -79,6 +94,10 @@ public class MetaCountSystemArbitraryPrecision
 
     void print()
     {
+        if(isNegative)
+        {
+            System.out.print("NEG ");
+        }
         System.out.print(n.get(0));
         for(int i = 1; i < width(); i++)
         {
@@ -113,6 +132,12 @@ public class MetaCountSystemArbitraryPrecision
 
     void increment()
     {
+        if(isNegative)
+        {
+            isNegative = false;
+            decrement();
+            isNegative = true;
+        }
         for(int arbitPos = width()-1; arbitPos >= 0; arbitPos--)
         {
             String set = cs.increment(n.get(arbitPos));
@@ -130,45 +155,11 @@ public class MetaCountSystemArbitraryPrecision
         }
     }
 
-    boolean decrement(int arbitPos)
+    void decrement(int arbitPos)
     {
         ArrayList<String> initState = new ArrayList<String>(n);
-        boolean ret = false;
         for(; arbitPos >= 0; arbitPos--)
         {
-            if(!at(arbitPos).equals(cs.zero()))ret = true;
-            if(at(arbitPos).equals(cs.zero()))
-            {
-                n.set(arbitPos,BASE);
-                if(arbitPos == 0)
-                {
-                    n.clear();
-                    n.add(cs.zero());
-                    break;
-                }
-            }
-            else
-            {
-                n.set(arbitPos,cs.decrement(at(arbitPos)));
-                break;
-            }
-        }
-        if(!ret)
-        {
-            n.clear();
-            n = initState;
-        }
-        removeLeadingZeroes();
-        return ret;
-    }
-
-    boolean decrement()
-    {
-        ArrayList<String> initState = new ArrayList<String>(n);
-        boolean ret = false;
-        for(int arbitPos = width()-1; arbitPos >= 0; arbitPos--)
-        {
-            if(!at(arbitPos).equals(cs.zero()))ret = true;
             if(at(arbitPos).equals(cs.zero()))
             {
                 n.set(arbitPos,cs.decrement(BASE));
@@ -185,13 +176,44 @@ public class MetaCountSystemArbitraryPrecision
                 break;
             }
         }
-        if(!ret)
+        removeLeadingZeroes();
+    }
+
+    void decrement()
+    {
+        if(isNegative)
         {
+            isNegative = false;
+            increment();
+            isNegative = true;
+        }
+        if(equals(zero()))
+        {
+            isNegative = true;
             n.clear();
-            n = initState;
+            n.add(cs.one());
+            return;
+        }
+        ArrayList<String> initState = new ArrayList<String>(n);
+        for(int arbitPos = width()-1; arbitPos >= 0; arbitPos--)
+        {
+            if(at(arbitPos).equals(cs.zero()))
+            {
+                n.set(arbitPos,cs.decrement(BASE));
+                if(arbitPos == 0)
+                {
+                    n.clear();
+                    n.add(cs.zero());
+                    break;
+                }
+            }
+            else
+            {
+                n.set(arbitPos,cs.decrement(at(arbitPos)));
+                break;
+            }
         }
         removeLeadingZeroes();
-        return ret;
     }
 
     void removeLeadingZeroes()
@@ -315,7 +337,13 @@ public class MetaCountSystemArbitraryPrecision
     boolean equals(MetaCountSystemArbitraryPrecision b)
     {
         if(width() != b.width())
-        return false;
+        {
+            return false;
+        }
+        if(isNegative != b.isNegative)
+        {
+            return false;
+        }
 
         for(int i = 0; i < width(); i++)
         {
@@ -383,7 +411,8 @@ public class MetaCountSystemArbitraryPrecision
                 c++;
             }
             r += csTo.alphaAt(c);
-        }while(exp.decrement());
+            exp.decrement();
+        }while(!exp.isNegative);
 
         return r;
     }
@@ -458,6 +487,29 @@ public class MetaCountSystemArbitraryPrecision
 
     void add(MetaCountSystemArbitraryPrecision b)
     {
+        if(isNegative && b.isNegative)
+        {
+            isNegative = false;
+            b.isNegative = false;
+            add(b);
+            isNegative = true;
+            b.isNegative = true;
+            return;
+        }
+        if(!isNegative && b.isNegative)
+        {
+            subtract(b);
+            return;
+        }
+        if(isNegative && !b.isNegative)
+        {
+            //b-a
+            MetaCountSystemArbitraryPrecision bt = new MetaCountSystemArbitraryPrecision(BASE,cs,b.n,false);
+            bt.subtract(this);
+            n = new ArrayList<>(bt.n);
+            isNegative = bt.isNegative;
+            return;
+        }
         MetaCountSystemArbitraryPrecision a = new MetaCountSystemArbitraryPrecision(BASE,cs,n);
         n.clear();
         int posA = a.width() - 1, posB = b.width() - 1;
@@ -475,7 +527,7 @@ public class MetaCountSystemArbitraryPrecision
             {
                 indexSum = cs.mod(indexSum,BASE);
                 n.add(0,indexSum);
-                indexSum = Character.toString(cs.alpha[1]);
+                indexSum = cs.one();
                 if(posA == 0 && posB == 0)n.add(0,indexSum);
             }
             posA--;
@@ -516,6 +568,45 @@ public class MetaCountSystemArbitraryPrecision
 
     void subtract(MetaCountSystemArbitraryPrecision b)
     {
+        if(isNegative && b.isNegative)
+        {
+            MetaCountSystemArbitraryPrecision bt = new MetaCountSystemArbitraryPrecision(BASE,cs,b.n,false);
+            isNegative = false;
+            bt.subtract(this);
+            isNegative = bt.isNegative;
+            n = new ArrayList<>(bt.n);
+            return;
+        }
+        if(!isNegative && b.isNegative)
+        {
+            b.isNegative = false;
+            add(b);
+            b.isNegative = true;
+            return;
+        }
+        if(isNegative && !b.isNegative)
+        {
+            isNegative = false;
+            b.isNegative = false;
+            add(b);
+            isNegative = true;
+            b.isNegative = true;
+            return;
+        }
+        if(equals(b))
+        {
+            n = new ArrayList<>();
+            n.add(cs.zero());
+            return;
+        }
+        if(lessThan(b))
+        {
+            MetaCountSystemArbitraryPrecision bt = new MetaCountSystemArbitraryPrecision(BASE,cs,b.n,b.isNegative);
+            bt.subtract(this);
+            n = new ArrayList<>(bt.n);
+            isNegative = true;
+            return;
+        }
         MetaCountSystemArbitraryPrecision a = new MetaCountSystemArbitraryPrecision(BASE,cs,n);
         n.clear();
         int posA = a.width() - 1, posB = b.width() - 1;
@@ -533,10 +624,11 @@ public class MetaCountSystemArbitraryPrecision
             {
                 indexDiff = cs.add(BASE,indexDiff);
                 n.add(0,indexDiff);
-                indexDiff = "-" + cs.one();
+                indexDiff = cs.neg + cs.one();
                 if(posA == 0 & posB == 0)
                 {
-                    System.out.println("ERROR: MCSAP went negative\n");
+//                    isNegative = true;
+                    System.out.println("ERROR: MCSAP went negative.\nHow did this happen? We're smarter than this.\n");
                     System.exit(1);
                 }
             }
@@ -547,7 +639,8 @@ public class MetaCountSystemArbitraryPrecision
         if(!indexDiff.equals(cs.zero()) && posA >= 0)
         {
             int lO = a.width();
-            if(!a.decrement(posA))
+            a.decrement(posA);
+            if(a.isNegative)
             {
                 a.n.add(0,cs.decrement(BASE));
             }
@@ -560,7 +653,8 @@ public class MetaCountSystemArbitraryPrecision
         if(!indexDiff.equals(cs.zero()) && posB >= 0)
         {
             int lO = b.width();
-            if(!b.decrement(posB))
+            b.decrement(posB);
+            if(b.isNegative)
             {
                 b.n.add(0,cs.decrement(BASE));
             }
@@ -606,8 +700,81 @@ public class MetaCountSystemArbitraryPrecision
         }
     }
 
+    MetaCountSystemArbitraryPrecision subWord(int startIndex, int endIndex)
+    {
+        ArrayList<String> retAL = new ArrayList<String>(endIndex-startIndex);
+        for(int i = startIndex; i <= endIndex; i++)
+        {
+            retAL.add(n.get(i));
+        }
+        return new MetaCountSystemArbitraryPrecision(BASE,cs,retAL);
+
+    }
+
     void multiply(MetaCountSystemArbitraryPrecision b)
     {
+        multiplyKaratsuba(b);
+    }
+
+    void multiplyKaratsuba(MetaCountSystemArbitraryPrecision b)
+    {
+        int k = Integer.min(width(),b.width())/2;
+        if(k<=1)
+        {
+            multiplyOld(b);
+            return;
+        }
+//        MetaCountSystemArbitraryPrecision a = new MetaCountSystemArbitraryPrecision(BASE,cs,n);
+        MetaCountSystemArbitraryPrecision x0 = subWord(width()-k,width()-1);
+        MetaCountSystemArbitraryPrecision x1 = subWord(0,width()-k-1);
+        while(x0.at(0).equals(cs.zero()) && x0.width() > 1)
+        {
+            x0.n.remove(0);
+        }
+
+        MetaCountSystemArbitraryPrecision y0 = b.subWord(b.width()-k,b.width()-1);
+        MetaCountSystemArbitraryPrecision y1 = b.subWord(0,b.width()-k-1);
+        while(y0.at(0).equals(cs.zero()) && y0.width() > 1)
+        {
+            y0.n.remove(0);
+        }
+
+        MetaCountSystemArbitraryPrecision z2 = new MetaCountSystemArbitraryPrecision(BASE,cs,x1.n);
+        z2.multiplyKaratsuba(y1);
+        MetaCountSystemArbitraryPrecision z0 = new MetaCountSystemArbitraryPrecision(BASE,cs,x0.n);
+        z0.multiplyKaratsuba(y0);
+        x1.add(x0);
+        y1.add(y0);
+        MetaCountSystemArbitraryPrecision z1 = new MetaCountSystemArbitraryPrecision(BASE,cs,x1.n);
+        z1.multiplyKaratsuba(y1);
+        z1.subtract(z2);
+        z1.subtract(z0);
+
+        n.clear();
+        n = new ArrayList<String>(z0.n);
+        z1.leftShift(k);
+        z2.leftShift(k<<1);
+        add(z1);
+        add(z2);
+    }
+
+    /*
+    karatsuba's a lot faster, so use it instead. This still can't be deleted since we need it as  subroutine for karatsuba
+     */
+    void multiplyOld(MetaCountSystemArbitraryPrecision b)
+    {
+        boolean finalIsNegative;
+        boolean bOriginalIsNegative = b.isNegative;
+        if(isNegative == b.isNegative)
+        {
+            finalIsNegative = false;
+        }
+        else
+        {
+            finalIsNegative = true;
+        }
+        isNegative = false;
+        b.isNegative = false;
         if(b.equals(one()))
         {
             return;
@@ -661,6 +828,8 @@ public class MetaCountSystemArbitraryPrecision
             posA--;
             aShift++;
         }
+        b.isNegative = bOriginalIsNegative;
+        isNegative = finalIsNegative;
     }
 
     MetaCountSystemArbitraryPrecision powRet(MetaCountSystemArbitraryPrecision p)
