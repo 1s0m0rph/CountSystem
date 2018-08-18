@@ -1,7 +1,8 @@
 
 public abstract class CountSystem
 {
-    private static final char neg = '-'; //change this if you need the '-' character in your alpha
+    public static final char neg = '-';     //change this if you need the '-' character in your alpha
+    private static final char point = '.';  //change this if you need the '.' character in your alpha
     public String BASE;
     int BASE_INT;
     public char[] alpha;
@@ -113,15 +114,15 @@ public abstract class CountSystem
         String precisionDec = d.convert(csFrom,precision);
         int precisionInt = Integer.parseInt(precisionDec);
         String wholePart = "";
-        if(num.charAt(0) == '.')
+        if(num.charAt(0) == point)
             wholePart = Character.toString(csFrom.alphaAt(0));
         else
-            wholePart = convert(csFrom,num.substring(0,num.indexOf(".")));
+            wholePart = convert(csFrom,num.substring(0,num.indexOf(point)));
         if(precision.equals(csFrom.zero()))
         {
             return wholePart;
         }
-        num = num.substring(num.indexOf(".")+1);
+        num = num.substring(num.indexOf(point)+1);
         String numLength = csFrom.convertDec(Integer.toString(num.length()));
         while(csFrom.lessThan(numLength,precision))
         {
@@ -139,7 +140,7 @@ public abstract class CountSystem
         convNum = convNum.substring(0,convNum.length()-precisionInt);
         if(wholePart.equals(""))
             wholePart = zero();
-        return wholePart + "." + convert(csFrom,convNum);
+        return wholePart + point + convert(csFrom,convNum);
     }
 
     /*/
@@ -157,13 +158,13 @@ public abstract class CountSystem
     /*/
     String convertWithPartials(CountSystem csFrom, String num)
     {
-        String wholePart = convert(csFrom,num.substring(0,num.indexOf(".")));
-        num = num.substring(num.indexOf(".")+1);
+        String wholePart = convert(csFrom,num.substring(0,num.indexOf(point)));
+        num = num.substring(num.indexOf(point)+1);
         String BASE_csf = csFrom.convertDec(BASE);
         String convNum = csFrom.multiply(csFrom.pow(BASE_csf,Integer.toString(num.length())),num);
         convNum = convNum.substring(0,convNum.length()-num.length());
 
-        return wholePart + "." + convert(csFrom,convNum);
+        return wholePart + point + convert(csFrom,convNum);
     }
 
     //     String convert(long num)
@@ -295,8 +296,8 @@ public abstract class CountSystem
         while(csFrom.lessThan(lowerBound,upperBound) || lowerBound.equals(upperBound))
         {
             String midBin = bin.rightShift(bin.add(ubBin,lbBin),1);
-            if(midBin.indexOf(".") != -1)
-                midBin = midBin.substring(0,midBin.indexOf("."));
+            if(midBin.indexOf(point) != -1)
+                midBin = midBin.substring(0,midBin.indexOf(point));
             String middle = csFrom.convert(bin,midBin);//special method?
             String checkVal = csFrom.subtract(num,csFrom.multiply(baseExp,middle));
             if(csFrom.lessThan(checkVal,csFrom.zero()))
@@ -478,7 +479,7 @@ public abstract class CountSystem
     }
 
     /*
-     * O(log base BASE (n)) performance
+     * Theta(max(n,m)) performance
      */
     String add(String a, String b)
     {
@@ -494,6 +495,17 @@ public abstract class CountSystem
         {
             return neg + add(a.substring(1),b.substring(1));
         }
+
+        int shift = 0;
+        if(a.contains(Character.toString(point)) || b.contains(Character.toString(point)))
+        {
+            int np = a.length() - a.indexOf(point) - 1;
+            int mp = b.length() - b.indexOf(point) - 1;
+            shift = Integer.max(np,mp);
+            a = leftShift(a,shift);
+            b = leftShift(b,shift);
+        }
+
         int posA = a.length() - 1, posB = b.length() - 1;
         String r = "";
 
@@ -548,25 +560,49 @@ public abstract class CountSystem
             r = r.substring(1);
         }
 
-        return r;
+        return rightShift(r,shift);
     }
+    
+    String removeExtraneousZeroes(String n)
+	{
+		while(n.charAt(0) == alpha[0] && n.length() > 1) n = n.substring(1);
+		while(n.contains(Character.toString(point)) && (n.charAt(n.length()-1) == alpha[0] || n.charAt(n.length() - 1) == point))
+			n = n.substring(0,n.length()-1);
+		if(n.equals(Character.toString(point)) || n.equals(""))n = zero();
+		return n;
+	}
 
     boolean lessThan(String a, String b)
     {
+    	a = removeExtraneousZeroes(a);
+    	b = removeExtraneousZeroes(b);
         if(a.equals(b))return false;
         if(a.equals(Character.toString(alpha[0])))return b.charAt(0) != neg;
         if(b.equals(Character.toString(alpha[0])))return a.charAt(0) == neg;
-        if(a.length() > b.length())return false;
-        if(a.length() < b.length())return true;
+        if(!a.contains(Character.toString(point)))a = a + point + alpha[0];
+		if(!b.contains(Character.toString(point)))b = b + point + alpha[0];
+        if(a.indexOf(point) < b.indexOf(point))return true;
+        if(a.indexOf(point) > b.indexOf(point))return false;
 
         int checkIndex = 0;
         while(checkIndex < a.length())
         {
-            if(alphaIndex(a.charAt(checkIndex)) > alphaIndex(b.charAt(checkIndex)))return false;
-            if(alphaIndex(a.charAt(checkIndex)) < alphaIndex(b.charAt(checkIndex)))return true;
-            checkIndex++;
+            if(a.charAt(checkIndex) != point && b.charAt(checkIndex) == point)
+            {
+            	return false;
+            }
+            if(a.charAt(checkIndex) == point && b.charAt(checkIndex) != point)
+			{
+				return true;
+			}
+			if(a.charAt(checkIndex) != point && b.charAt(checkIndex) != point)
+			{
+				if (alphaIndex(a.charAt(checkIndex)) > alphaIndex(b.charAt(checkIndex))) return false;
+				if (alphaIndex(a.charAt(checkIndex)) < alphaIndex(b.charAt(checkIndex))) return true;
+			}
+			checkIndex++;
         }
-        return false;
+        return false;//unreachable statement: we will have returned false on line 568 in this case bc a = b
     }
 
     /*
@@ -586,6 +622,17 @@ public abstract class CountSystem
         {
             return neg + subtract(b,a);
         }
+
+        int shift = 0;
+        if(a.contains(Character.toString(point)) || b.contains(Character.toString(point)))
+        {
+            int np = a.length() - a.indexOf(point) - 1;
+            int mp = b.length() - b.indexOf(point) - 1;
+            shift = Integer.max(np,mp);
+            a = leftShift(a,shift);
+            b = leftShift(b,shift);
+        }
+
         int posA = a.length() - 1, posB = b.length() - 1;
         String r = "";
 
@@ -656,7 +703,7 @@ public abstract class CountSystem
             r = r.substring(1);
         }
 
-        return r;
+        return rightShift(r,shift);
     }
 
     String nZeroes(int n)
@@ -670,8 +717,79 @@ public abstract class CountSystem
     }
 
     /*
-    TODO: implement Karatsuba for multiplication
+    in base B
+     */
+    String width(String n)
+    {
+        String r = zero();
+        for(int i = 0; i < n.length(); i++)
+        {
+            r = increment(r);
+        }
+        return r;
+    }
+
+    String multiply(String a, String b)
+    {
+        String r;
+        int shift = 0;
+        if(a.contains(Character.toString(point)))
+        {
+            int np = a.length() - a.indexOf(point) - 1;
+            a = leftShift(a,np);
+            shift += np;
+        }
+        if(b.contains(Character.toString(point)))
+        {
+            int mp = b.length() - b.indexOf(point) - 1;
+            b = leftShift(b,mp);
+            shift += mp;
+        }
+        r = multiplyKaratsuba(a,b);
+        return rightShift(r,shift);
+    }
+
+    /*
+    WAY WAY WAY FASTER than multiply
+     */
+    String multiplyKaratsuba(String a, String b)
+    {
+        int k = Integer.min(a.length(),b.length())/2;//this choice makes things fast
+        if(k <= 1)
+        {
+            return multiplyRecursive(a,b);
+        }
+        //k = min(m,n)-1
+        String x0 = a.substring(a.length()-k);
+        String x1 = a.substring(0,a.length()-k);
+        while(x0.charAt(0) == alpha[0] && x0.length() > 1)
+        {
+            x0 = x0.substring(1);
+        }
+
+        //a = x1*B^k + x0
+        String y0 = b.substring(b.length()-k);
+        String y1 = b.substring(0,b.length()-k);
+        while(y0.charAt(0) == alpha[0] && y0.length() > 1)
+        {
+            y0 = y0.substring(1);
+        }
+        //b = y1*B^k + y0
+        //get these ^^ values by somehow dividing a and b by B^k
+        //this isn't a problem since that's just going to be a right shift
+        //z2 = x1*y1
+        String z2 = multiplyKaratsuba(x1,y1);
+        //z0 = x0*y0
+        String z0 = multiplyKaratsuba(x0,y0);
+        //z1 = (x1+x0)*(y1+y0)-z2-z0
+        String z1 = subtract(subtract(multiplyKaratsuba(add(x1,x0),add(y1,y0)),z2),z0);
+        //ANS = (z2 << 2k) + (z1 << k) + z0
+        return add(leftShift(z2,k<<1),add(leftShift(z1,k),z0));
+    }
+
+    /*
      * a little slower, but not recursive
+     * this method should never be called with a non-integer (it doesn't know what to do with them)
      */
     String multiplyMCSAP(String a, String b)
     {
@@ -720,10 +838,13 @@ public abstract class CountSystem
 
     /*
      * faster, but recursive
+     * this method should never be called with a non-integer (it doesn't know what to do with them)
      */
-    String multiply(String a, String b)
+    String multiplyRecursive(String a, String b)
     {
         if(lessThan(a,b))return multiply(b,a);
+
+        //implement partial number multiplication
         String r = zero();
         if(a.length() == 1 && b.length() == 1)
         {
@@ -740,7 +861,7 @@ public abstract class CountSystem
 
         while(posA >= 0)
         {
-            r = add(r,multiply(b,Character.toString(a.charAt(posA))) + nZeroes(exp));
+            r = add(r,multiplyRecursive(b,Character.toString(a.charAt(posA))) + nZeroes(exp));
             posA--;
             exp++;
         }
@@ -771,11 +892,24 @@ public abstract class CountSystem
 
         return a;
     }
+    
+    /*
+    default division is a/b to integer
+     */
+    String divide(String a, String b)
+	{
+		return divideGold(a,b,1);
+	}
+    
+    String divide(String a, String b, int places)
+	{
+		return divideGold(a,b,places);
+	}
 
     /*
      * deprecated as of 2018-06-12. Use dividePartial instead
      */
-    String divide(String a, String b, boolean showRemainder)
+    String divideOld(String a, String b, boolean showRemainder)
     {
         String div = Character.toString(alpha[0]);
         while(!lessThan(a,b) && !a.substring(0,1).equals(Character.toString(neg)))
@@ -795,7 +929,7 @@ public abstract class CountSystem
     /*
      * deprecated as of 2018-06-12. Use dividePartial instead
      */
-    String divide(String a, String b)
+    String divideOld(String a, String b)
     {
         String div = Character.toString(alpha[0]);
         while(!lessThan(a,b) && !a.substring(0,1).equals(Character.toString(neg)))
@@ -811,13 +945,111 @@ public abstract class CountSystem
 
         return div;
     }
+    
+    /*
+    if place is positive, then round to integer (tens, ones, etc.)
+    if it's negative, then round to decimal (tenths, hundreths, etc.)
+    zero means no round
+     */
+    String round(String n, int place)
+	{
+		if(place == 0) return n;
+		if(!n.contains(Character.toString(point)))n = n + point + alpha[0];
+		int last;
+		if(place > 0)
+		{
+			last = n.indexOf(point) - place + 1;
+		}
+		else
+		{
+			place = -place;
+			last = n.indexOf(point) + place + 1;
+		}
+		if (last > n.length() - 1)
+			return n;
+		int charVal = alphaIndex(n.charAt(last));
+		String sub = n.substring(0,last);
+		if(charVal >= BASE_INT/2)
+		{
+			//round up
+			sub = increment(sub);
+		}
+		return removeExtraneousZeroes(sub + nZeroes(place-1));
+	}
+	
+	/*
+	fastest division algorithm as of 2018-08-18, implementation of the Goldschmidt division algorithm.
+	This version uses the round() method to ensure accuracy up to <place> digits. See round() for details.
+	
+	PREFERRED DIVISION METHOD 2018-08-18
+	 */
+	String divideGold(String a, String b, int place)
+	{
+		if(place == 0)
+		{
+			System.out.println("ERROR: CountSystem::divideGold: <place> was set to zero. This would cause an infinite loop!");
+			System.exit(4);
+		}
+		if(!a.contains(Character.toString(point)))a = a + point + alpha[0];
+		if(!b.contains(Character.toString(point)))b = b + point + alpha[0];
+		
+		int shift = b.indexOf(point)-1;
+		a = rightShift(a,shift);
+		b = rightShift(b,shift);
+		String norm = subtract(one(),subtract(b,b.substring(0,1)));
+		a = multiply(a,norm);
+		b = multiply(b,norm);
+		//initialize st 0.5 <= b <= 1
+		
+		String e = subtract(one(),b);
+		String q = a;
+		String qprev = null;
+		while(qprev == null || !round(q,place).equals(round(qprev,place)))
+		{
+			qprev = q;
+			q = multiply(q,add(one(),e));
+			e = multiply(e,e);
+		}
+		return round(q,place);
+	}
+ 
+	/*
+	see divideGold() for more details.
+	This version just calculates to a simple integer precision.
+	 */
+    String divideGoldPrecision(String a, String b, int precision)
+	{
+		if(!a.contains(Character.toString(point)))a = a + point + alpha[0];
+		if(!b.contains(Character.toString(point)))b = b + point + alpha[0];
+		
+		int shift = b.indexOf(point)-1;
+		a = rightShift(a,shift);
+		b = rightShift(b,shift);
+		String norm = subtract(one(),subtract(b,b.substring(0,1)));
+		a = multiply(a,norm);
+		b = multiply(b,norm);
+		//initialize st 0.5 <= b <= 1
+		
+		String e = subtract(one(),b);
+		String q = a;
+		for(int i = 0; i < precision; i++)
+		{
+			q = multiply(q,add(one(),e));
+			e = multiply(e,e);
+		}
+		return q;
+	}
 
     String rightShift(String n, int places)
     {
-        int pointPos = n.indexOf(".");
+        if(n.equals(zero()))
+        {
+            return n;
+        }
+        int pointPos = n.indexOf(point);
         if(pointPos != -1)
         {
-            n = n.replace(".","");
+            n = n.replace(Character.toString(point),"");
             pointPos--;
         }
         else
@@ -836,13 +1068,13 @@ public abstract class CountSystem
             }
         }
 
-        n =  n.substring(0,pointPos + 1) + "." + n.substring(pointPos + 1);
+        n =  n.substring(0,pointPos + 1) + point + n.substring(pointPos + 1);
         int pos = n.length()-1;
         for(; pos > 0 && (n.charAt(pos) == alpha[0]); pos--)
         {
-            if(n.charAt(pos) == '.') break;
+            if(n.charAt(pos) == point) break;
         }
-        if(n.charAt(pos) == '.') pos--;
+        if(n.charAt(pos) == point) pos--;
         return n.substring(0,pos+1);
     }
 
@@ -858,10 +1090,14 @@ public abstract class CountSystem
 
     String leftShift(String n, int places)
     {
-        int pointPos = n.indexOf(".");
+        if(n.equals(zero()) || places == 0)
+        {
+            return n;
+        }
+        int pointPos = n.indexOf(point);
         if(pointPos != -1)
         {
-            n = n.replace(".","");
+            n = n.replace(Character.toString(point),"");
             pointPos--;
         }
         else
@@ -878,29 +1114,29 @@ public abstract class CountSystem
         }
 
 
-        n = n.substring(0,pointPos + 1) + "." + n.substring(pointPos + 1);
+        n = n.substring(0,pointPos + 1) + point + n.substring(pointPos + 1);
         int posEnd = 0;
         if(n.charAt(0) == neg)posEnd++;
         for(; posEnd <= n.length() && n.charAt(posEnd) == alpha[0]; posEnd++){}
-        if(n.indexOf(".") == 0) n = alpha[0] + n;
-        if(n.indexOf(".") == 1 && n.charAt(0) == neg) n = n.substring(0,1) + alpha[0] + n.substring(1);
+        if(n.indexOf(point) == 0) n = alpha[0] + n;
+        if(n.indexOf(point) == 1 && n.charAt(0) == neg) n = n.substring(0,1) + alpha[0] + n.substring(1);
         int posBeg = n.length()-1;
         for(; posBeg > 0 && (n.charAt(posBeg) == alpha[0]); posBeg--)
         {
-            if(n.charAt(posBeg) == '.') break;
+            if(n.charAt(posBeg) == point) break;
         }
-        if(n.charAt(posBeg) == '.') posBeg--;
+        if(n.charAt(posBeg) == point) posBeg--;
 
         return n.substring(posEnd,posBeg+1);
     }
 
     /*
-    TODO: implement some kind of faster division algorithm here
+    This algorithm is nowhere near as fast as Goldschmidt (see divideGold()), but it's still really interesting.
      */
     String dividePartial(String a, String b)
     {
         //step 1: convert to whole numbers
-        int aArpoint = a.indexOf(".");
+        int aArpoint = a.indexOf(point);
         if(aArpoint != -1 && aArpoint != a.length()-1)
         {
             //left-shift both a and b far enough to make a a whole number
@@ -909,7 +1145,7 @@ public abstract class CountSystem
             a = leftShift(a,shiftAmt);
             b = leftShift(b,shiftAmt);
         }
-        int bArpoint = b.indexOf(".");
+        int bArpoint = b.indexOf(point);
         if(bArpoint != -1 && bArpoint != a.length()-1)
         {
             int shiftAmt = b.length()-bArpoint-1;
@@ -935,7 +1171,7 @@ public abstract class CountSystem
     String dividePartial(String a, String b, int precision)
     {
         //step 1: convert to whole numbers
-        int aArpoint = a.indexOf(".");
+        int aArpoint = a.indexOf(point);
         if(aArpoint != -1 && aArpoint != a.length()-1)
         {
             //left-shift both a and b far enough to make a whole
@@ -944,7 +1180,7 @@ public abstract class CountSystem
             a = leftShift(a,shiftAmt);
             b = leftShift(b,shiftAmt);
         }//O(n)
-        int bArpoint = b.indexOf(".");
+        int bArpoint = b.indexOf(point);
         if(bArpoint != -1 && bArpoint != a.length()-1)
         {
             int shiftAmt = b.length()-bArpoint-1;
