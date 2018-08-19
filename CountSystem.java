@@ -565,10 +565,11 @@ public abstract class CountSystem
     
     String removeExtraneousZeroes(String n)
 	{
-		while(n.charAt(0) == alpha[0] && n.length() > 1) n = n.substring(1);
+		while(n.charAt(0) == alpha[0] && n.length() > 1 && n.charAt(2) != point) n = n.substring(1);
 		while(n.contains(Character.toString(point)) && (n.charAt(n.length()-1) == alpha[0] || n.charAt(n.length() - 1) == point))
 			n = n.substring(0,n.length()-1);
 		if(n.equals(Character.toString(point)) || n.equals(""))n = zero();
+		if(n.charAt(0) == point)n = zero() + n;
 		return n;
 	}
 
@@ -871,7 +872,7 @@ public abstract class CountSystem
 
     String pow(String a, String b)
     {
-        if(b.equals(Character.toString(alpha[0])))return "1";
+        if(b.equals(Character.toString(alpha[0])))return one();
         if(a.equals(BASE))return leftShift(one(),b);
         String r = a;
         for(String i = Character.toString(alpha[1]); lessThan(i,b); i = increment(i))
@@ -993,13 +994,17 @@ public abstract class CountSystem
 		if(!a.contains(Character.toString(point)))a = a + point + alpha[0];
 		if(!b.contains(Character.toString(point)))b = b + point + alpha[0];
 		
-		int shift = b.indexOf(point)-1;
+		int shift = b.indexOf(point);
 		a = rightShift(a,shift);
 		b = rightShift(b,shift);
-		String norm = subtract(one(),subtract(b,b.substring(0,1)));
-		a = multiply(a,norm);
-		b = multiply(b,norm);
+		if(lessThan(b,zero() + point + alpha[BASE_INT/2]))
+		{
+			//a,b *= 2
+			a = add(a,a);
+			b = add(b,b);
+		}
 		//initialize st 0.5 <= b <= 1
+//		String norm = subtract(one(),subtract(b,b.substring(0,1)));
 		
 		String e = subtract(one(),b);
 		String q = a;
